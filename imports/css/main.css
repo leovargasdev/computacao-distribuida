@@ -1,28 +1,17 @@
 body{
     padding: 20px;
+    background-color: silver;
 }
-/* TEMPLATE: base.html */
-.logo-menu{
-    font-weight: 800;
-    margin-right: 40px;
+.titulo-pagina h2{
+    font-weight: bold;
+    text-align: center;
+    color: white;
 }
-.logo-menu i{
-    font-size: 44px;
-}
-.itens-menu{
-    margin-left: 25px;
-}
-.itens-menu li a{
-    font-size: 20px;
-    font-weight: 900;
+.card-panel{
+    border-bottom-right-radius: 150px!important;
+    border-top-left-radius: 150px!important;
 }
 
-/* TEMPLATE: login.html e cadastro.html*/
-.titulo-form{
-    background: white;
-    border-radius: 50px;
-    font-size: 42px;
-}
 .bnt-form{
     margin-top: 20px;
     width: 100%;

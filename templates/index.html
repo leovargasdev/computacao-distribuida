@@ -3,27 +3,32 @@
 {% block head %} {{ super() }} {% endblock %}
 
 {% block content %}
-    <div class="row">
-        <div class="col s12">
-            <h1>Página inicial</h1>
-            <ul>
-                {% for p in peers%}
-                    <li>{{p}}</li>
-                {% endfor %}
-            </ul>
-            <h1>
-                <a href="/contador">[Somar]</a> Número Mágico: {{numero}}
-            </h1>
-            <br>
-            <br>
-            <br>
-            <h5>
-                <form action="/contador" method="POST">
-                    <button type="submit" class="btn-large waves-effect waves-light bnt-form">
-                        Trapacear
-                    </button>
-                </form>
-            </h5>
+<div class="row">
+    <div class="col s10 offset-s1 titulo-pagina">
+        <div class="card-panel black">
+            <h2>Copa Mundial do Tio do PAVÊ</h2>
         </div>
     </div>
+    <div class="col s12">
+        <ul>
+            <h3>Usuários Ativos:</h3>
+            {% for u in users%}
+            <li>{{u}}</li>
+            {% endfor %}
+        </ul>
+        <form action="/contador" method="POST">
+            <div class="row">
+                <div class="col s12 input-form">
+                    <label for="nick">Nick:</label>
+                    <input type="text" name="nick" placeholder="Seu nickname">
+                </div>
+                <div class="col s8 offset-s2">
+                    <button type="submit" class="btn-large waves-effect waves-light bnt-form">
+                        Que comecem os JOGOS!!
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
 {% endblock %}
