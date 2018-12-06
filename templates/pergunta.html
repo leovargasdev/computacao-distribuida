@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %} {{title}} {% endblock %}
+{% block head %} {{ super() }} {% endblock %}
+
+{% block content %}
+<div class="row">
+    <h1>Jogador: {{nick}}</h1>
+    <h1>Legenda</h1>
+    <h3>{{descricao}}</h3>
+</div>
+{% endblock %}
