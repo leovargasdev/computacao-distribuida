@@ -1,48 +1,105 @@
-import pergunta
+import zubaluba
 import functools
 from bottle import Bottle, request, route, jinja2_view, run, response, redirect, static_file, sys
 
 app = Bottle()
 view = functools.partial(jinja2_view, template_lookup=['templates'])
-
 porta = int(sys.argv[1])
-jogadores = {}
+
+jogadores = []
 questoes = []
-questoes.append(pergunta.Piadinha(
+n_questao = 0
+questoes.append(zubaluba.Piadinha(
     'Qual o estado brasileiro que queria ser um carro?',
     'Sergipe',
-    ['Parana', 'New York', 'Guatambu', 'São Paulo', 'Sergipe', 'Gotham City'],
+    ['Parana', 'New York', 'Guatambu', 'São Paulo', 'Gotham City'],
     7
 ))
-numero_questao = 0
+
+questoes.append(zubaluba.Piadinha(
+    'Por que o anão gosta de surfar na cozinha??',
+    'Porque tem Microondas',
+    ['Porque hoje é segunda-feira', 'Anão sei', 'Porque ele é um masterchef Júnior'],
+    13
+))
+
+questoes.append(zubaluba.Piadinha(
+    'blabla??',
+    'sadassa',
+    ['sadassa', 'Anão sei', 'Porque ele é um masterchef Júnior'],
+    1
+))
+
 @app.route('/imports/css/<filename>')
 def server_static(filename):
     return static_file(filename, root='./imports/css')
 
-# [PÁGINA] Home
 @app.route('/')
 @view('index.html')
 def index():
-    return {'title': 'Página Inicial', 'users': ['jogadores', 'topep']}
+    global jogadores
+    return {'title': 'Página Inicial', 'users': jogadores}
 
+# Criar um novo jogador
 @app.route('/iniciar', method='POST')
 def inicializando_jogador():
+
     global jogadores
-    global porta
-    global numero_questao
+    global n_questao
+
+    id_jogador = int(len(jogadores))
     nick = request.forms.get('nick')
-    if nick:
-        if (nick in jogadores) == False:
-            jogadores[nick] = 0
-            redirect('/usr/{}/pergunta/{}'.format(nick, numero_questao))
+
+    if obterJogador(nick) == False:
+        jogadores.append(zubaluba.User(id_jogador, nick))
+        redirect('/usr/{}/pergunta'.format(nick))
+
     redirect('/')
 
-@app.route('/usr/<nick>/pergunta/<nq>', method='GET')
+@app.route('/usr/<nick>/pergunta', method='GET')
 @view('pergunta.html')
-def carregar_pergunta(nick, nq):
+def carregar_pergunta(nick):
     global questoes
-    a = questoes[int(nq)].descricao
-    return {'nick': nick, 'title': 'Pergunta', 'descricao': a}
+    global n_questao
+
+    if n_questao == len(questoes):
+        redirect('/winner/{}'.format(nick))
+
+    questao = questoes[n_questao]
+    questao.embaralhaOpcoes()
+
+    return {'jogador': obterJogador(nick), 'piadinha': questao, 'numero': n_questao, 'title': 'Pergunta'}
+
+@app.route('/usr/<nick>/responder/<nq>', method='POST')
+def verifica_resposta(nick, nq):
+    global questoes
+    global jogadores
+    global n_questao
+
+    id = obterJogador(nick)._id
+    resposta = request.forms.get('resposta')
+
+    pts = questoes[int(nq)].checkResposta(resposta)
+    jogadores[id].pontos = pts + jogadores[id].pontos
+
+    if pts > 0:
+        nq = int(nq) + 1
+        if nq > n_questao:
+            n_questao = nq
+
+    redirect('/usr/{}/pergunta'.format(jogadores[id].nick))
+
+@app.route('/winner/<nick>', method='GET')
+@view('winner.html')
+def verifica_resposta(nick):
+    return {'jogador': obterJogador(nick), 'title': 'Um winner'}
+
+def obterJogador(n):
+    global jogadores
+    for j in jogadores:
+        if j.nick == n:
+            return j
+    return False
 
 
 run(app, host='localhost', port=porta, debug=True, reloader=True)

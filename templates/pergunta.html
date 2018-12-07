@@ -4,8 +4,37 @@
 
 {% block content %}
 <div class="row">
-    <h1>Jogador: {{nick}}</h1>
-    <h1>Legenda</h1>
-    <h3>{{descricao}}</h3>
+    <div class="col s12">
+        <h1>Jogador: {{jogador.nick}}, Pontos: {{jogador.pontos}}</h1>
+    </div>
+    <form action="/usr/{{jogador.nick}}/responder/{{numero}}" method="POST">
+        <div class="row">
+            <div class="col s10 offset-s2">
+                <center>
+                    <h4>
+                        {{numero}}) <b>{{piadinha.descricao}}</b>
+                    </h4>
+                </center>
+                <br>
+                <br>
+                <ul>
+                    {% for op in piadinha.opcoes%}
+                    <li>
+                        <label>
+                            <input class="with-gap" name="resposta" type="radio" value="{{op}}" />
+                            <span style="color: white">{{op}}</span>
+                        </label>
+                    </li>
+                    <br>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="col s6 offset-s3">
+                <button type="submit" class="btn-large waves-effect waves-light bnt-form">
+                    Verificar
+                </button>
+            </div>
+        </div>
+    </form>
 </div>
 {% endblock %}
