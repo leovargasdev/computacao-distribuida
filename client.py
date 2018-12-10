@@ -8,8 +8,10 @@ from bottle import Bottle, route, request, jinja2_view, run, response, redirect,
 
 app = Bottle()
 view = functools.partial(jinja2_view, template_lookup=['templates'])
+
 porta = int(sys.argv[1])
 servidor = 'http://localhost:3000'
+pergunta = jogador = ''
 
 @app.route('/imports/css/<filename>')
 def server_static(filename):
@@ -26,14 +28,31 @@ def index():
 
 @app.route('/iniciar', method='POST')
 def inicializando_jogador():
+    global jogador
     nick = request.forms.get('nick')
-    print('nick:', nick)
-    jogador = requests.get('{}/jogador/{}'.format(servidor, nick))
+    jogador = json.loads(requests.get('{}/jogador/{}'.format(servidor, nick)).text)
+    redirect('/usr/{}/pergunta'.format(nick))
 
-    print("jogador", jogador.text)
+@app.route('/usr/<nick>/pergunta', method='GET')
+@view('pergunta.html')
+def carregar_pergunta(nick):
+    global pergunta
+    global jogador
+
+    pergunta = json.loads(requests.get('{}/pergunta'.format(servidor)).text)
+
+    return {'jogador': jogador, 'piadinha': pergunta, 'title': 'Pergunta'}
+
+@app.route('/responder', method='POST')
+def verifica_resposta():
+    global pergunta
+    global jogador
+
+    pergunta['reposta'] = request.forms.get('resposta')
+
+    jogador = requests.get('{}/usr/{}/responder/{}'.format(servidor, jogador['nick'], json.dumps(pergunta)))
 
     redirect('/')
-
 
 def verificando_servidor():
     try:

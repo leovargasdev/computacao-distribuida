@@ -10,9 +10,9 @@ peers = sys.argv[1:]
 jogadores = []
 n_questao = 0
 questoes = []
-questoes.append(zubaluba.Piadinha('Qual o estado brasileiro que queria ser um carro?', 'Sergipe', ['Parana', 'New York', 'Guatambu', 'São Paulo', 'Gotham City'], 7))
-questoes.append(zubaluba.Piadinha('Por que o anão gosta de surfar na cozinha??', 'Porque tem Microondas', ['Porque hoje é segunda-feira', 'Anão sei', 'Porque ele é um masterchef Júnior'], 13))
-questoes.append(zubaluba.Piadinha('blabla??', 'sadassa', ['sadassa', 'Anão sei', 'Porque ele é um masterchef Júnior'], 1))
+questoes.append(zubaluba.Piadinha(0, 'Qual o estado brasileiro que queria ser um carro?', 'Sergipe', ['Parana', 'New York', 'Guatambu', 'São Paulo', 'Gotham City'], 7))
+questoes.append(zubaluba.Piadinha(1, 'Por que o anão gosta de surfar na cozinha??', 'Porque tem Microondas', ['Porque hoje é segunda-feira', 'Anão sei', 'Porque ele é um masterchef Júnior'], 13))
+questoes.append(zubaluba.Piadinha(2, 'blabla??', 'sadassa', ['sadassa', 'Anão sei', 'Porque ele é um masterchef Júnior'], 1))
 
 @bottle.route('/estouvivo')
 def estou_vivo():
@@ -20,8 +20,7 @@ def estou_vivo():
 
 @bottle.route('/add/<p>')
 def index(p):
-    # Não adiciona caso já esteja na lista
-    if p not in peers:
+    if p not in peers: # Não adiciona caso já esteja na lista
         peers.append(p)
     return json.dumps(peers)
 
@@ -33,6 +32,22 @@ def retorna_joagador(nick):
         jogadores.append(jogador)
         print('Novo jogador criado com sucesso!!')
     return json.dumps(jogador)
+
+@bottle.route('/pergunta')
+def obter_nQuestao():
+    global questoes
+    global n_questao
+
+    questao = questoes[n_questao]
+    questao.embaralhaOpcoes()
+
+    return json.dumps(questao.__dict__)
+
+@bottle.route('/usr/<nick>/responder/<pergunta>')
+def verifica_resposta(nick, pergunta):
+    print("nick:", nick)
+    print("pergunta:", pergunta)
+    return json.dumps('jogador')
 
 @bottle.route('/peers')
 def index():
@@ -54,7 +69,7 @@ def testar_peers():
                 print("[", p, "] Está ativo?", aux.text)
             except:
                 print("[", p, "] Sem contato, faleceu!!!")
-        time.sleep(5)
+        time.sleep(8)
 
 t1 = threading.Thread(target=testar_peers)
 t1.start()

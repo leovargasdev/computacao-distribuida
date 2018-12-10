@@ -1,7 +1,8 @@
 import random
 
 class Piadinha:
-    def __init__(self, desc, resposta, opcoes, pts):
+    def __init__(self, id, desc, resposta, opcoes, pts):
+        self._id = id                   # Esse id é incremental
         self.descricao = desc           # Descrição da pergunta
         self.resposta = resposta        # Resposta correta
         self.opcoes = opcoes            # Array em várias alternativas
@@ -15,9 +16,3 @@ class Piadinha:
 
     def embaralhaOpcoes(self):
         random.shuffle(self.opcoes) # Embaralha as opções
-
-class User:
-    def __init__(self, id, nick):
-        self._id = id
-        self.nick = nick
-        self.pontos = 0
