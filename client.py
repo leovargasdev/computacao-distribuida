@@ -1,36 +1,41 @@
+import zubaluba
+import functools
 import requests
-import bottle
+import sys
 import json
 import threading
-import time
-import sys
+from bottle import Bottle, route, jinja2_view, run, response, redirect
 
-peers = sys.argv[2:]
+app = Bottle()
+view = functools.partial(jinja2_view, template_lookup=['templates'])
+porta = int(sys.argv[1])
+servidor = 'http://localhost:3000'
 
-@bottle.route('/add/<p>')
-def index(p):
-    peers.append(p)
-    return json.dumps(peers)
+@app.route('/estouvivo')
+def estou_vivo():
+    return json.dumps('Yes baby')
 
-@bottle.route('/peers')
+@app.route('/')
+@view('index.html')
 def index():
-    return json.dumps(peers)
 
-def client():
-    time.sleep(5)
+    return {'title': 'Página Inicial'}
+
+def verificando_servidor():
+    try:
+        aux = requests.get('{}/add/{}'.format(servidor, porta))
+        run(app, host='localhost', port=porta, debug=True, reloader=True)
+    except:
+        print('Servidor não ativo!')
+        return
+    time.sleep(10)
     while True:
-        time.sleep(1)
-        np = []
-        for p in peers:
-            r = requests.get(p + '/peers')
-            np = np + json.loads(r.text)
-            print(np)
-            time.sleep(1)
-        peers[:] = list(set(np + peers))
+        try:
+            aux_2 = requests.get('{}/estouvivo'.format(servidor))
+            print("Servidor", aux_2.text)
+        except:
+            print("Sem contato com o servidor!!!")
+        time.sleep(5)
 
-        print(peers)
-
-t = threading.Thread(target=client)
-t.start()
-
-bottle.run(host='localhost', port=int(sys.argv[1]))
+t1 = threading.Thread(target=verificando_servidor)
+t1.start()
