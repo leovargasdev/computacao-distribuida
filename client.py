@@ -4,12 +4,16 @@ import requests
 import sys
 import json
 import threading
-from bottle import Bottle, route, jinja2_view, run, response, redirect
+from bottle import Bottle, route, request, jinja2_view, run, response, redirect, static_file
 
 app = Bottle()
 view = functools.partial(jinja2_view, template_lookup=['templates'])
 porta = int(sys.argv[1])
 servidor = 'http://localhost:3000'
+
+@app.route('/imports/css/<filename>')
+def server_static(filename):
+    return static_file(filename, root='./imports/css')
 
 @app.route('/estouvivo')
 def estou_vivo():
@@ -18,8 +22,18 @@ def estou_vivo():
 @app.route('/')
 @view('index.html')
 def index():
-
     return {'title': 'Página Inicial'}
+
+@app.route('/iniciar', method='POST')
+def inicializando_jogador():
+    nick = request.forms.get('nick')
+    print('nick:', nick)
+    jogador = requests.get('{}/jogador/{}'.format(servidor, nick))
+
+    print("jogador", jogador.text)
+
+    redirect('/')
+
 
 def verificando_servidor():
     try:

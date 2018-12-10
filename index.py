@@ -9,26 +9,11 @@ porta = int(sys.argv[1])
 jogadores = []
 questoes = []
 n_questao = 0
-questoes.append(zubaluba.Piadinha(
-    'Qual o estado brasileiro que queria ser um carro?',
-    'Sergipe',
-    ['Parana', 'New York', 'Guatambu', 'São Paulo', 'Gotham City'],
-    7
-))
+questoes.append(zubaluba.Piadinha('Qual o estado brasileiro que queria ser um carro?', 'Sergipe', ['Parana', 'New York', 'Guatambu', 'São Paulo', 'Gotham City'], 7))
 
-questoes.append(zubaluba.Piadinha(
-    'Por que o anão gosta de surfar na cozinha??',
-    'Porque tem Microondas',
-    ['Porque hoje é segunda-feira', 'Anão sei', 'Porque ele é um masterchef Júnior'],
-    13
-))
+questoes.append(zubaluba.Piadinha('Por que o anão gosta de surfar na cozinha??', 'Porque tem Microondas', ['Porque hoje é segunda-feira', 'Anão sei', 'Porque ele é um masterchef Júnior'], 13))
 
-questoes.append(zubaluba.Piadinha(
-    'blabla??',
-    'sadassa',
-    ['sadassa', 'Anão sei', 'Porque ele é um masterchef Júnior'],
-    1
-))
+questoes.append(zubaluba.Piadinha('blabla??', 'sadassa', ['sadassa', 'Anão sei', 'Porque ele é um masterchef Júnior'], 1))
 
 @app.route('/imports/css/<filename>')
 def server_static(filename):
