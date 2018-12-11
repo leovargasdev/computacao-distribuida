@@ -1,4 +1,4 @@
-import zubaluba
+from questao import Piadinha
 import requests
 import json
 import bottle
@@ -6,40 +6,39 @@ import threading
 import time
 import sys
 
-
 peers = sys.argv[1:]
 jogadores = []
+questoes =[]
 n_questao = 0
-questoes = []
 vencedor = False
-questoes.append(zubaluba.Piadinha(0, 'Qual o estado brasileiro que queria ser um carro?', 'Sergipe', ['Parana', 'New York', 'Guatambu', 'São Paulo', 'Gotham City'], 7))
-questoes.append(zubaluba.Piadinha(1, 'Por que o anão gosta de surfar na cozinha??', 'Porque tem Microondas', ['Porque hoje é segunda-feira', 'Anão sei', 'Porque ele é um masterchef Júnior'], 13))
-questoes.append(zubaluba.Piadinha(2, 'blabla??', 'sadassa', ['sadassa', 'Anão sei', 'Porque ele é um masterchef Júnior'], 1))
+questoes.append(Piadinha(0, 'Qual o estado brasileiro que queria ser um carro?', 'Sergipe', ['Parana', 'New York', 'Guatambu', 'São Paulo', 'Gotham City'], 7))
+questoes.append(Piadinha(1, 'Por que o anão gosta de surfar na cozinha??', 'Porque tem Microondas', ['Porque hoje é segunda-feira', 'Anão sei', 'Porque ele é um masterchef Júnior'], 13))
+questoes.append(Piadinha(2, 'blabla??', 'sadassa', ['sadassa', 'Anão sei', 'Porque ele é um masterchef Júnior'], 1))
 
+# Rota para testar se o servidor está ativo
 @bottle.route('/estouvivo')
 def estou_vivo():
     return json.dumps('Olar!!')
 
+# Adicionando um novo cliente ao servidor
 @bottle.route('/add/<p>')
 def index(p):
     if p not in peers: # Não adiciona caso já esteja na lista
         peers.append(p)
     return json.dumps(peers)
 
+# Retorna todos os jogadores e seus respectivos pontos
 @bottle.route('/situacaoJogo')
 def situacao_jogo():
     global jogadores
-
     result = ''
     for j in jogadores:
         result += j['nick'] + "#" + str(j['pts']) + "__"
-
     if result == '':
-        result = 'Sem jogadores ativos!!'
-
+        return json.dumps('Sem jogadores ativos!!')
     return json.dumps(result)
 
-
+# Cria um novo jogador, e caso já exita esse nick é retornado suas informações
 @bottle.route('/jogador/<nick>')
 def retorna_joagador(nick):
     jogador = obterJogador(nick)
@@ -49,14 +48,16 @@ def retorna_joagador(nick):
         print('Novo jogador criado com sucesso!!')
     return json.dumps(jogador)
 
+# Carrega a próxima pergunta para o jogador
 @bottle.route('/pergunta')
 def obter_nQuestao():
     global questoes
     global n_questao
-
+    if vencedor:
+        return json.dumps({'winner': json.dumps(vencedor)})
     questao = questoes[n_questao]
     questao.embaralhaOpcoes()
-
+    print("questao:", questao)
     return json.dumps(questao.__dict__)
 
 @bottle.route('/usr/<nick>/responder/<pergunta>')
@@ -81,10 +82,6 @@ def verifica_resposta(nick, pergunta):
                 vencedor = jogador
         else: # Não teve vencedor ainda
             vencedor = jogador
-
-    if vencedor:
-        jogador['winner'] = json.dumps(vencedor)
-        print("vencedor:", vencedor)
 
     return json.dumps(jogador)
 

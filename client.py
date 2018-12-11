@@ -1,4 +1,3 @@
-import zubaluba
 import functools
 import requests
 import sys
@@ -34,15 +33,23 @@ def inicializando_jogador():
     nick = request.forms.get('nick')
     nick = nick.replace(' ', '_')
     jogador = json.loads(requests.get('{}/jogador/{}'.format(servidor, nick)).text)
-    redirect('/usr/{}/pergunta'.format(nick))
+    redirect('/pergunta')
 
-@app.route('/usr/<nick>/pergunta', method='GET')
+@app.route('/pergunta', method='GET')
 @view('pergunta.html')
-def carregar_pergunta(nick):
+def carregar_pergunta():
     global pergunta
     global jogador
 
-    pergunta = json.loads(requests.get('{}/pergunta'.format(servidor)).text)
+    aux = requests.get('{}/pergunta'.format(servidor))
+    aux = json.loads(aux.text)
+
+    if 'winner' in aux:
+        jogador['winner'] = json.loads(aux['winner'])
+        if jogador['winner']['nick'] == jogador['nick']:
+            redirect('/winner')
+        redirect('/loser')
+    pergunta = aux
     return {'jogador': jogador, 'piadinha': pergunta, 'title': 'Pergunta'}
 
 @app.route('/responder', method='POST')
@@ -50,22 +57,21 @@ def verifica_resposta():
     global pergunta
     global jogador
 
-    aux = {'resposta': request.forms.get('resposta'), 'id': pergunta['_id']}
-    aux = json.dumps(aux)
+    aux = json.dumps({'resposta': request.forms.get('resposta'), 'id': pergunta['_id']})
     jogador = requests.get('{}/usr/{}/responder/{}'.format(servidor, jogador['nick'], aux))
     jogador = json.loads(jogador.text)
-    if jogador['winner']:
-        jogador['winner'] = json.loads(jogador['winner'])
-        if jogador['winner']['nick'] == jogador['nick']:
-            redirect('/winner')
-        redirect('/loser')
-    redirect('/usr/{}/pergunta'.format(jogador['nick']))
+    redirect('/pergunta')
 
 @app.route('/winner', method='GET')
 @view('winner.html')
 def mostra_winner():
     global jogador
     return {'jogador': jogador['winner'], 'title': 'Um winner'}
+
+@app.route('/winner', method='POST')
+def reniciar_jogo():
+    print("Solicitação para reiniciar GAME aceita!!!")
+    redirect('/')
 
 @app.route('/loser', method='GET')
 @view('loser.html')
