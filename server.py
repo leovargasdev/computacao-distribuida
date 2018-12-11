@@ -35,7 +35,7 @@ def situacao_jogo():
         result += j['nick'] + "#" + str(j['pts']) + "__"
 
     if result == '':
-        result = 'Sem jogadores ativos'
+        result = 'Sem jogadores ativos!!'
 
     return json.dumps(result)
 

@@ -32,6 +32,7 @@ def inicializando_jogador():
     global jogador
 
     nick = request.forms.get('nick')
+    nick = nick.replace(' ', '_')
     jogador = json.loads(requests.get('{}/jogador/{}'.format(servidor, nick)).text)
     redirect('/usr/{}/pergunta'.format(nick))
 
@@ -87,7 +88,7 @@ def verificando_servidor():
         try:
             aux = requests.get('{}/estouvivo'.format(servidor))
             print("Servidor diz:", str(aux.text))
-        except:
+        except requests.exceptions.ConnectionError:
             print("Sem contato com o servidor!!!")
         time.sleep(12)
 
@@ -97,10 +98,14 @@ def situacao_jogo():
         try:
             aux = requests.get('{}/situacaoJogo'.format(servidor))
             aux = str(aux.text).replace('\"', '').split('__')
-            for k in aux:
-                k = k.split('#')
-                print("Jogador:", k[0] + "\tPontos:", k[1])
-        except:
+            if len(aux) == 1:
+                print(aux[0] + '\n')
+            else:
+                for k in aux:
+                    if k != '':
+                        k = k.split('#')
+                        print("Pontos:", k[1] + "\tJogador:", k[0])
+        except requests.exceptions.ConnectionError:
             print("Sem contato com o servidor!!!")
         time.sleep(20)
 
