@@ -29,6 +29,7 @@ def index():
 @app.route('/iniciar', method='POST')
 def inicializando_jogador():
     global jogador
+
     nick = request.forms.get('nick')
     jogador = json.loads(requests.get('{}/jogador/{}'.format(servidor, nick)).text)
     redirect('/usr/{}/pergunta'.format(nick))
@@ -40,7 +41,6 @@ def carregar_pergunta(nick):
     global jogador
 
     pergunta = json.loads(requests.get('{}/pergunta'.format(servidor)).text)
-
     return {'jogador': jogador, 'piadinha': pergunta, 'title': 'Pergunta'}
 
 @app.route('/responder', method='POST')
@@ -48,11 +48,11 @@ def verifica_resposta():
     global pergunta
     global jogador
 
-    pergunta['reposta'] = request.forms.get('resposta')
-
-    jogador = requests.get('{}/usr/{}/responder/{}'.format(servidor, jogador['nick'], json.dumps(pergunta)))
-
-    redirect('/')
+    aux = {'resposta': request.forms.get('resposta'), 'id': pergunta['_id']}
+    aux = json.dumps(aux)
+    jogador = requests.get('{}/usr/{}/responder/{}'.format(servidor, jogador['nick'], aux))
+    jogador = json.loads(jogador.text)
+    redirect('/usr/{}/pergunta'.format(jogador['nick']))
 
 def verificando_servidor():
     try:

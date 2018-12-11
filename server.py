@@ -45,9 +45,20 @@ def obter_nQuestao():
 
 @bottle.route('/usr/<nick>/responder/<pergunta>')
 def verifica_resposta(nick, pergunta):
-    print("nick:", nick)
-    print("pergunta:", pergunta)
-    return json.dumps('jogador')
+    global questoes
+    pergunta = json.loads(pergunta)
+    id = int(pergunta['id'])
+    pts = questoes[id].checkResposta(pergunta['resposta'])
+
+    if pts > 0:
+        prox_questao = id + 1
+        if prox_questao > n_questao:
+            n_questao = prox_questao
+
+    print("nick:", pts)
+    jogador = atualizar_pts(nick, pts)
+    print("jogador:", jogador)
+    return json.dumps(jogador)
 
 @bottle.route('/peers')
 def index():
@@ -59,6 +70,13 @@ def obterJogador(n):
         if j['nick'] == n:
             return j
     return False
+
+def atualizar_pts(n, pontos):
+    global jogadores
+    for j in range(len(jogadores)):
+        if jogadores[j]['nick'] == n:
+            jogadores[j]['pts'] = jogadores[j]['pts'] + pontos
+            return jogadores[j]
 
 def testar_peers():
     time.sleep(10)
