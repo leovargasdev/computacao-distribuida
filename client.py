@@ -4,6 +4,7 @@ import requests
 import sys
 import json
 import threading
+import time
 from bottle import Bottle, route, request, jinja2_view, run, response, redirect, static_file
 
 app = Bottle()
@@ -52,23 +53,62 @@ def verifica_resposta():
     aux = json.dumps(aux)
     jogador = requests.get('{}/usr/{}/responder/{}'.format(servidor, jogador['nick'], aux))
     jogador = json.loads(jogador.text)
+    if jogador['winner']:
+        jogador['winner'] = json.loads(jogador['winner'])
+        if jogador['winner']['nick'] == jogador['nick']:
+            redirect('/winner')
+        redirect('/loser')
     redirect('/usr/{}/pergunta'.format(jogador['nick']))
 
-def verificando_servidor():
+@app.route('/winner', method='GET')
+@view('winner.html')
+def mostra_winner():
+    global jogador
+    return {'jogador': jogador['winner'], 'title': 'Um winner'}
+
+@app.route('/loser', method='GET')
+@view('loser.html')
+def mostra_loser():
+    global jogador
+    print("loser:", jogador)
+    return {'jogador': jogador, 'title': 'Um loser'}
+
+def status_servidor():
     try:
         aux = requests.get('{}/add/{}'.format(servidor, porta))
-        run(app, host='localhost', port=porta, debug=True, reloader=True)
+        return True
     except:
         print('Servidor não ativo!')
-        return
+    return False
+
+def verificando_servidor():
     time.sleep(10)
     while True:
         try:
-            aux_2 = requests.get('{}/estouvivo'.format(servidor))
-            print("Servidor", aux_2.text)
+            aux = requests.get('{}/estouvivo'.format(servidor))
+            print("Servidor diz:", str(aux.text))
         except:
             print("Sem contato com o servidor!!!")
-        time.sleep(5)
+        time.sleep(12)
 
-t1 = threading.Thread(target=verificando_servidor)
-t1.start()
+def situacao_jogo():
+    time.sleep(5)
+    while True:
+        try:
+            aux = requests.get('{}/situacaoJogo'.format(servidor))
+            aux = str(aux.text).replace('\"', '').split('__')
+            for k in aux:
+                k = k.split('#')
+                print("Jogador:", k[0] + "\tPontos:", k[1])
+        except:
+            print("Sem contato com o servidor!!!")
+        time.sleep(20)
+
+if status_servidor():
+    t1 = threading.Thread(target=verificando_servidor)
+    t1.start()
+
+    t2 = threading.Thread(target=situacao_jogo)
+    t2.start()
+
+    run(app, host='localhost', port=porta)
