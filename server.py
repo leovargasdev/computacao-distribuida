@@ -1,29 +1,27 @@
-from questao import Piadinha
-import requests
-import json
-import bottle
-import threading
-import time
 import sys
+import json
+import time
+import bottle
+import requests
+import threading
+from questao import Piadinha
 
 peers = []
 jogadores = []
 questoes =[]
 n_questao = 0
 vencedor = False
-reiniciar = False
 semaforo = threading.Semaphore()
-
 questoes.append(Piadinha(0, 'Qual o estado brasileiro que queria ser um carro?', 'Sergipe', ['Parana', 'New York', 'Guatambu', 'São Paulo', 'Gotham City'], 7))
 questoes.append(Piadinha(1, 'Por que o anão gosta de surfar na cozinha??', 'Porque tem Microondas', ['Porque hoje é segunda-feira', 'Anão sei', 'Porque ele é um masterchef Júnior'], 13))
 questoes.append(Piadinha(2, 'Por que não se deve comprar uma peneira??', 'Pode ser uma furada', ['Você não precisa', 'Porque você não quer peneirar na vida', 'Num sei'], 5))
-questoes.append(Piadinha(3, 'Por que a velhinha não usa relógio??', 'Porque ela é senhora', ['Porque ela é sabia e vê as horas pelo sol', 'Porque o neto robou para comprar um Hot Wheels', 'Porque ela não tem tempo pra isso'], 9))
+questoes.append(Piadinha(3, 'Por que a velhinha não usa relógio??', 'Porque ela eh senhora', ['Porque ela é sabia e vê as horas pelo sol', 'Porque o neto robou para comprar um Hot Wheels', 'Porque ela não tem tempo pra isso'], 9))
 questoes.append(Piadinha(4, 'Sabe oque o tiaguinho foi fazer na igreja?', 'Foi cantar Pagod', ['Rezar', 'Comungar', 'Fazer um Show', 'Foi cantar "Oh Happy Day"'], 19))
 questoes.append(Piadinha(5, 'Por que o policial não lava a louça com sabão?', 'Porque ele prefere deter gente', ['Porque ele não tem tempo', 'Porque sabão é muito liso, e de liso já basta os bandidos', 'Porque não é um sabadão'], 15))
-questoes.append(Piadinha(6, 'Sabe porque hoje em dia não se passa mais roupa??', 'Pois a vida passa e a gente nem vê', ['Pessoas não usam mais roupas', 'Pois a única coisa que passa é a uva ou ônibus', 'Porque quem vive de passado é museu'], 21))
-questoes.append(Piadinha(7, 'Por que o bombeiro não gosta de andar?', 'Porque ele só corre', ['Pra que andar, se tem uber', 'Porque andar é coisa de véio'], 9))
-questoes.append(Piadinha(8, 'Oque é um pontinho pequeno e preto?', 'É uma blackteria', ['Um feijão anão', 'O ponto da questão', 'Um ponto negativo', 'Um ponto'], 34))
-questoes.append(Piadinha(9, 'E a pergunta que não quer calar, é pavê ou pacume?', 'Todas respostas', ['Pavê', 'Pacume', 'Pacheirar', 'Paolhar'], 34))
+questoes.append(Piadinha(6, 'Sabe porque hoje em dia não se passa mais roupa??', 'Pois a vida passa e a gente nem ve', ['Pessoas não usam mais roupas', 'Pois a única coisa que passa é a uva ou ônibus', 'Porque quem vive de passado é museu'], 21))
+questoes.append(Piadinha(7, 'Por que o bombeiro não gosta de andar?', 'Porque ele so corre', ['Pra que andar, se tem uber', 'Porque andar é coisa de véio'], 9))
+questoes.append(Piadinha(8, 'Oque é um pontinho pequeno e preto?', 'Eh uma blackteria', ['Um feijão anão', 'O ponto da questão', 'Um ponto negativo', 'Um ponto'], 34))
+questoes.append(Piadinha(9, 'E a pergunta que não quer calar, é pavê ou pacume?', 'Todas respostas', ['Pavê', 'Pacume', 'Pacheirar', 'Paolhar'], 50))
 
 # Rota para testar se o servidor está ativo
 @bottle.route('/estouvivo')
@@ -91,11 +89,12 @@ def verifica_resposta(nick, pergunta):
 @bottle.route('/usr/<nick>/reiniciar')
 def reiniciar_jogo(nick):
     global vencedor
+    # Quando for reiniciado o vencedor deve estar vazio, podendo assim começar o jogo novamente
+    if vencedor == False:
+        return json.dumps('#partiu')
     # Somente o vencedor tem o poder de reiniciar o jogo
     if nick == vencedor['nick']:
         reiniciar()
-    # Quando for reiniciado o vencedor deve estar vazio, podendo assim começar o jogo novamente
-    if vencedor == False:
         return json.dumps('#partiu')
     return json.dumps('Non')
 
@@ -137,12 +136,11 @@ def reiniciar():
     global vencedor
     global jogadores
     global vencedor
-    global reiniciar
     global n_questao
 
     for j in range(len(jogadores)):
         jogadores[j]['pts'] = 0
-    reiniciar = vencedor = False
+    vencedor = False
     n_questao = 0
 
 # A cada 15 segundos confere se todos os clientes estão ativos
