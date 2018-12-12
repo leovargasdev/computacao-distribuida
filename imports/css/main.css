@@ -1,21 +1,35 @@
 body{
     padding: 20px;
-    background-color: silver;
+    background-color: #244042;
+    color: white;
+    font-family: 'Exo 2', sans-serif;
 }
-.titulo-pagina h2{
+h2{
     font-weight: bold;
     text-align: center;
     color: white;
+    font-family: 'Source Sans Pro', sans-serif;
 }
-.card-panel{
-    border-bottom-right-radius: 150px!important;
-    border-top-left-radius: 150px!important;
+.label-nick p{
+    font-size: 28px;
+    text-align: right;
+    margin: 5px auto auto auto;
 }
-
 .bnt-form{
     margin-top: 20px;
     width: 100%;
 }
 input[type=text]:not(.browser-default), input[type=password]:not(.browser-default){
-    border-bottom: 1px solid #000000 !important;
+    font-size: 22px !important;
+    height: 2rem !important;
+    padding-left: 2px !important;
+    padding-bottom: 4px !important;
+    margin-top: 13px !important;
+    color: white !important;
+}
+.opcoes-piadinha li{
+    padding-bottom: 14px;
+}
+.opcoes-piadinha span{
+    font-size: 18px!important;
 }

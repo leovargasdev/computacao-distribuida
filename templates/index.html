@@ -4,31 +4,47 @@
 
 {% block content %}
 <div class="row">
-    <div class="col s10 offset-s1 titulo-pagina">
-        <div class="card-panel black">
+    <div class="col s12">
+        <div class="card-panel brown">
             <h2>Copa Mundial do Tio do PAVÊ</h2>
         </div>
     </div>
-    <div class="col s12">
-        <ul>
-            <h3>Usuários Ativos:</h3>
-            {% for u in users%}
-            <li>{{u.nick}}</li>
-            {% endfor %}
-        </ul>
-        <form action="/iniciar" method="POST">
-            <div class="row">
-                <div class="col s12 input-form">
-                    <label for="nick">Nick:</label>
-                    <input type="text" name="nick" placeholder="Seu nickname">
-                </div>
-                <div class="col s8 offset-s2">
-                    <button type="submit" class="btn-large waves-effect waves-light bnt-form">
-                        Que comecem os JOGOS!!
-                    </button>
-                </div>
+</div>
+<br> <br>
+<form action="/iniciar" method="POST">
+    <div class="row">
+        <div class="col s8 offset-s2">
+            <div class="col s2 label-nick">
+                <p>Nick:</p>
             </div>
-        </form>
+            <div class="col s10 input-form">
+                <input type="text" name="nick">
+            </div>
+        </div>
+        <div class="col s4 offset-s4">
+            <button type="submit" class="btn-large waves-effect waves-light bnt-form">
+                Que comecem os JOGOS!!
+            </button>
+        </div>
+    </div>
+</form>
+<div class="row">
+    <div class="col s12">
+        <h4>Usuários Ativos:</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>Nome</th> <th>Pontos</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for j in jogadores%}
+                <tr>
+                    <td>{{j.nome}}</td> <td>{{j.pts}}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
     </div>
 </div>
 {% endblock %}

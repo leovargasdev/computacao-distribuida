@@ -24,7 +24,15 @@ def estou_vivo():
 @app.route('/')
 @view('index.html')
 def index():
-    return {'title': 'Página Inicial'}
+    result = []
+    jogadores = requests.get('{}/situacaoJogo'.format(servidor))
+    jogadores = str(jogadores.text).replace('\"', '').split('__')
+    if 1 < len(jogadores):
+        for j in jogadores:
+            if j != '':
+                j = j.split('#')
+                result.append({'pts': j[1],'nome': j[0]})
+    return {'title': 'Página Inicial', 'jogadores': result}
 
 @app.route('/iniciar', method='POST')
 def inicializando_jogador():
@@ -96,10 +104,10 @@ def mostra_loser():
         global jogador
         redirect('/usr/{}'.format(jogador['nick']))
     redirect('/loser')
-
+# Tenta uma conexão inicial, para ver se o servidor está ativo
 def status_servidor():
     try:
-        aux = requests.get('{}/add/{}'.format(servidor, porta))
+        requests.get('{}/add/{}'.format(servidor, porta))
         return True
     except:
         print('Servidor não ativo!')
@@ -155,4 +163,5 @@ if status_servidor():
     t2 = threading.Thread(target=situacao_jogo)
     t2.start()
 
-    run(app, host='localhost', port=porta)
+run(app, host='localhost', port=porta, debug=True, reloader=True)
+# run(app, host='localhost', debug=True, reloader=True)
