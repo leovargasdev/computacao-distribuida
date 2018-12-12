@@ -82,9 +82,20 @@ def reniciar_jogo():
 @view('loser.html')
 def mostra_loser():
     global jogador
-    t3 = threading.Thread(target=reiniciar_jogo)
-    t3.start()
+    # t3 = threading.Thread(target=reiniciar_jogo)
+    # t3.start()
     return {'jogador': jogador, 'title': 'Um loser'}
+
+@app.route('/loser', method='POST')
+@view('loser.html')
+def mostra_loser():
+    resposta = requests.get('{}/usr/{}/reiniciar'.format(servidor, 'eu sou um coitado'))
+    resposta = str(resposta.text).replace('\"', '')
+    if resposta == '#partiu':
+        print("Servidor diz:", resposta)
+        global jogador
+        redirect('/usr/{}'.format(jogador['nick']))
+    redirect('/loser')
 
 def status_servidor():
     try:
@@ -121,21 +132,21 @@ def situacao_jogo():
             print("Sem contato com o servidor!!!")
         time.sleep(20)
 
-def reiniciar_jogo():
-    while True:
-        time.sleep(2)
-        resposta = ''
-        try:
-            resposta = requests.get('{}/usr/{}/reiniciar'.format(servidor, 'eu sou um coitado'))
-            resposta = str(resposta.text).replace('\"', '')
-            print("Servidor diz:", resposta)
-        except requests.exceptions.ConnectionError:
-            print("Sem contato com o servidor!!!")
-        if resposta == '#partiu':
-            print("entrooou")
-            break
-    # global jogador
-    # redirect('/usr/{}'.format(jogador['nick']))
+# def reiniciar_jogo():
+#     while True:
+#         time.sleep(2)
+#         resposta = ''
+#         try:
+#             resposta = requests.get('{}/usr/{}/reiniciar'.format(servidor, 'eu sou um coitado'))
+#             resposta = str(resposta.text).replace('\"', '')
+#             print("Servidor diz:", resposta)
+#         except requests.exceptions.ConnectionError:
+#             print("Sem contato com o servidor!!!")
+#         if resposta == '#partiu':
+#             print("entrooou")
+#             break
+#     global jogador
+#     redirect('/usr/{}'.format(jogador['nick']))
 
 if status_servidor():
     t1 = threading.Thread(target=verificando_servidor)
