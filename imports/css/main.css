@@ -4,7 +4,7 @@ body{
     color: white;
     font-family: 'Exo 2', sans-serif;
 }
-h2{
+h2, #you-winner p{
     font-weight: bold;
     text-align: center;
     color: white;
@@ -32,4 +32,29 @@ input[type=text]:not(.browser-default), input[type=password]:not(.browser-defaul
 }
 .opcoes-piadinha span{
     font-size: 18px!important;
+}
+#you-winner{
+    width: 100%;
+    height: auto;
+    border-radius: 6px;
+    animation-name: container-vencedor;
+    animation-duration: 4s;
+    animation-iteration-count: infinite;
+}
+#you-winner p{
+    padding: 22px 0px;
+    font-size: 32px;
+}
+@keyframes container-vencedor {
+    0%   { background-color:#0062ff } /*azul*/
+    10%  { background-color:#ff0400 } /*vermelho*/
+    20%  { background-color:#dc11f1 } /*roxo*/
+    30%  { background-color:#11f13a } /*verde*/
+    40%  { background-color:#9a9a9a } /*amarelo*/
+    50%  { background-color:#00fff7 } /*azul claro*/
+    60%  { background-color:#ffb500 } /*laranja*/
+    70%  { background-color:#ff00d0 } /*rosa*/
+    80%  { background-color:#000000 } /*preto*/
+    90%  { background-color:#fffb00 } /*cinza*/
+    100% { background-color:#93ff0c } /*verde claro*/
 }

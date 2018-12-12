@@ -3,33 +3,21 @@
 {% block head %} {{ super() }} {% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col s12">
-        <marquee>
-            <div class="col s2">
-                <div class="card-panel green">
-                    <h2>PERDI</h2>
-                </div>
-            </div>
-        </marquee>
-    </div>
-</div>
-
-
-
-<div class="card-panel green">
-    <div class="row">
-        <div class="col s12">
-            <br>
-            <h3>Você acaba de vencer a Copa Tiozão do PAVÊ!!!</h3>
-            <br>
-            <br>
-            <h1>Parabéns <b>{{jogador.nick}}</b>, you eh um WINNNER !!!</h1>
-            <br>
+<div class="row" style="margin-bottom:0px">
+    <div class="col s8 offset-s2">
+        <div id="you-winner">
+            <p>Você ganhou a Copa Tiozão do PAVÊ!!!</p>
         </div>
     </div>
 </div>
 <br>
+<div class="card-panel blue-grey lighten-2">
+    <div class="row">
+        <div class="col s12">
+            <h2>Parabéns <b>{{jogador.nick}}</b>, you eh um WINNNER !!!</h2>
+        </div>
+    </div>
+</div>
 <form action="/winner" method="POST">
     <div class="row">
         <div class="col s6 offset-s3">
@@ -39,4 +27,8 @@
         </div>
     </div>
 </form>
+<br> <br> <br> <br> <br> <br>
+<marquee>
+    <h6>Você é Topper!!!</h6>
+</marquee>
 {% endblock %}

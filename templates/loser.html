@@ -3,15 +3,18 @@
 {% block head %} {{ super() }} {% endblock %}
 
 {% block content %}
-<div class="card-panel red">
+<div class="card-panel deep-orange accent-1">
     <div class="row">
         <div class="col s12">
-            <br>
-            <h3><b>{{jogador.nick}}</b> you eh um Loseer!</h3>
-            <br>
-            <br>
-            <h1>Parabéns ao jogador <b>{{jogador.winner.nick}}</b>, ele sim eh um WINNNER !!!</h1>
-            <br>
+            <h2><b>{{jogador.nick}}</b> you eh um Loseer!</h2>
+        </div>
+    </div>
+</div>
+<br>
+<div class="card-panel blue-grey lighten-2">
+    <div class="row">
+        <div class="col s12">
+            <h2>Parabéns jogador <b>{{jogador.winner.nick}}</b>, ele sim eh um WINNNER !!!</h2>
         </div>
     </div>
 </div>
