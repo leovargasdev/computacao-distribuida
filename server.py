@@ -11,6 +11,7 @@ jogadores = []
 questoes =[]
 n_questao = 0
 vencedor = False
+reiniciar = False
 questoes.append(Piadinha(0, 'Qual o estado brasileiro que queria ser um carro?', 'Sergipe', ['Parana', 'New York', 'Guatambu', 'São Paulo', 'Gotham City'], 7))
 questoes.append(Piadinha(1, 'Por que o anão gosta de surfar na cozinha??', 'Porque tem Microondas', ['Porque hoje é segunda-feira', 'Anão sei', 'Porque ele é um masterchef Júnior'], 13))
 questoes.append(Piadinha(2, 'blabla??', 'sadassa', ['sadassa', 'Anão sei', 'Porque ele é um masterchef Júnior'], 1))
@@ -57,7 +58,6 @@ def obter_nQuestao():
         return json.dumps({'winner': json.dumps(vencedor)})
     questao = questoes[n_questao]
     questao.embaralhaOpcoes()
-    print("questao:", questao)
     return json.dumps(questao.__dict__)
 
 @bottle.route('/usr/<nick>/responder/<pergunta>')
@@ -84,6 +84,27 @@ def verifica_resposta(nick, pergunta):
             vencedor = jogador
 
     return json.dumps(jogador)
+
+@bottle.route('/usr/<nick>/reiniciar')
+def reiniciar_jogo(nick):
+    global vencedor
+    global jogadores
+    global vencedor
+    global reiniciar
+    global n_questao
+
+    if vencedor:
+        if nick == vencedor['nick']:
+            print("reiniciando jogo...")
+            for j in range(len(jogadores)):
+                jogadores[j]['pts'] = 0
+            vencedor = False
+            reiniciar = False
+            n_questao = 0
+            return json.dumps('#partiu')
+    else:
+        return json.dumps('#partiu')
+    return json.dumps('Non')
 
 @bottle.route('/peers')
 def index():

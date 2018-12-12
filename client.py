@@ -28,10 +28,13 @@ def index():
 
 @app.route('/iniciar', method='POST')
 def inicializando_jogador():
-    global jogador
-
     nick = request.forms.get('nick')
     nick = nick.replace(' ', '_')
+    redirect('/usr/{}'.format(nick))
+
+@app.route('/usr/<nick>', method='GET')
+def carregando_jogador(nick):
+    global jogador
     jogador = json.loads(requests.get('{}/jogador/{}'.format(servidor, nick)).text)
     redirect('/pergunta')
 
@@ -70,14 +73,17 @@ def mostra_winner():
 
 @app.route('/winner', method='POST')
 def reniciar_jogo():
-    print("Solicitação para reiniciar GAME aceita!!!")
-    redirect('/')
+    global jogador
+    aux = requests.get('{}/usr/{}/reiniciar'.format(servidor, jogador['nick']))
+    print("Servidor diz:", str(aux.text))
+    redirect('/usr/{}'.format(jogador['nick']))
 
 @app.route('/loser', method='GET')
 @view('loser.html')
 def mostra_loser():
     global jogador
-    print("loser:", jogador)
+    t3 = threading.Thread(target=reiniciar_jogo)
+    t3.start()
     return {'jogador': jogador, 'title': 'Um loser'}
 
 def status_servidor():
@@ -114,6 +120,22 @@ def situacao_jogo():
         except requests.exceptions.ConnectionError:
             print("Sem contato com o servidor!!!")
         time.sleep(20)
+
+def reiniciar_jogo():
+    while True:
+        time.sleep(2)
+        resposta = ''
+        try:
+            resposta = requests.get('{}/usr/{}/reiniciar'.format(servidor, 'eu sou um coitado'))
+            resposta = str(resposta.text).replace('\"', '')
+            print("Servidor diz:", resposta)
+        except requests.exceptions.ConnectionError:
+            print("Sem contato com o servidor!!!")
+        if resposta == '#partiu':
+            print("entrooou")
+            break
+    # global jogador
+    # redirect('/usr/{}'.format(jogador['nick']))
 
 if status_servidor():
     t1 = threading.Thread(target=verificando_servidor)
