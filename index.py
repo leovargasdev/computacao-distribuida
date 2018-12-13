@@ -15,9 +15,6 @@ port = sys.argv[1]
 
 jogador = ''
 jogadores = []
-jogadores.append({'pts': 1090, 'nome': 'Perdi'})
-jogadores.append({'pts': 100, 'nome': 'Teste'})
-jogadores.append({'pts': 100, 'nome': 'TOpper'})
 n_questao = 0
 vencedor = False
 semaforo = threading.Semaphore()
@@ -43,11 +40,60 @@ def index():
     global jogadores
     return {'title': 'Página Inicial', 'jogadores': jogadores}
 
+@bottle.route('/iniciar', method='POST')
+def carregando_jogador():
+    global jogadores
+    global jogador
+    nome = request.forms.get('nome').replace(' ', '_')
+    idJogador = obterJogador(nome)
+    if idJogador == -1:
+        jogadores.append({'nome': nome, 'pts': 0})
+        print("Novo jogador criado!")
+        idJogador = len(jogadores) - 1
+    jogador = jogadores[idJogador]
+    redirect('/pergunta')
+
+@bottle.route('/pergunta', method='GET')
+@view('pergunta.html')
+def carregar_pergunta():
+    global jogador
+    global questoes
+    global n_questao
+
+    atualiza_nQuestao()
+    questao = questoes[n_questao]
+    questao.embaralhaOpcoes()
+
+    return {'jogador': jogador, 'piadinha': questao, 'title': 'Pergunta'}
+
+@bottle.route('/responder', method='POST')
+def verifica_resposta():
+    global n_questao
+    global jogador
+    resposta = request.forms.get('resposta')
+    semaforo.acquire()
+    pts = questoes[n_questao].checkResposta(resposta)
+    jogador['pts'] = jogador['pts'] + pts
+    if 0 < pts:
+        n_questao = n_questao + 1
+        if n_questao == len(questoes):
+            print("Fim de jogo")
+    semaforo.release()
+    redirect('/pergunta')
+
+def atualiza_nQuestao():
+    global n_questao
+    for p in peers:
+        try:
+            nQuestaoVizinho = requests.get('http://localhost:{}/nPergunta'.format(p))
+            nQuestaoVizinho = int(nQuestaoVizinho.text)
+            if n_questao < nQuestaoVizinho:
+                print("Vizinho está mais avançado!!")
+                n_questao = nQuestaoVizinho
+        except:
+            print("Erro ao obter n_questao do Peer [", p, "]")
+
 #   [FIM]       --> [ [ ROTAS PARA TEMPLATES ] ]
-
-
-
-
 
 
 
@@ -74,6 +120,12 @@ def situacao_jogo():
     if result:
         return json.dumps(result[:-2])
     return json.dumps(result)
+
+# Retorna o número da questão
+@bottle.route('/nPergunta')
+def meus_vizinhos():
+    global n_questao
+    return json.dumps(n_questao)
 
 #   [FIM]       --> [ [ ROTAS DE COMUNICAÇÃO ENTRE OS PEERS ] ]
 
@@ -124,27 +176,22 @@ def trata_jogadores_vizinho(listaJogadores):
     if listaJogadores:
         listaJogadores = listaJogadores.split('__')
         for k in listaJogadores:
-            novo = True
             [nome, pts] = k.split('#')
             pts = int(pts)
-            for j in range(len(jogadores)):
-                if jogadores[j]['nome'] == nome:
-                    novo = False
-                    if jogadores[j]['pts'] < pts:
-                        print("Atualizando pontos jogador")
-                        jogadores[j]['pts'] = int(pts)
-                    break
-            # Adicionar novo jogador
-            if novo:
+            idJogador = obterJogador(nome)
+            # Não localizou nenhum jogador com aquele nome, então ele é adicionado a lista
+            if idJogador == -1:
                 print("Adicionando novo jogador!")
                 jogadores.append({'nome': nome, 'pts': pts})
-
-
+            # Localizou o jogador, confere se precisa atualizar seus pontos
+            else:
+                if jogadores[idJogador]['pts'] < pts:
+                    print("Atualizando pontos jogador")
+                    jogadores[idJogador]['pts'] = pts
 
 # A cada 15 segundos é perguntado a lista de vizinhos para os seus vizinhos
 def status_jogadores():
     global peers
-    time.sleep(10)
     while True:
         for p in peers:
             try:
@@ -164,6 +211,13 @@ t3 = threading.Thread(target=status_jogadores)
 t3.start()
 
 #   [FIM]       --> [ [ THREADS ] ]
+
+def obterJogador(n):
+    global jogadores
+    for j in range(len(jogadores)):
+        if jogadores[j]['nome'] == n:
+            return j
+    return -1
 
 # Carregando CSS
 @bottle.route('/imports/css/<filename>')
