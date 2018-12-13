@@ -17,19 +17,18 @@ jogador = ''
 jogadores = []
 n_questao = 0
 vencedor = False
-semaforo = threading.Semaphore()
 
 questoes = []
 questoes.append(Piadinha(0, 'Qual o estado brasileiro que queria ser um carro?', 'Sergipe', ['Parana', 'New York', 'Guatambu', 'São Paulo', 'Gotham City'], 7))
 questoes.append(Piadinha(1, 'Por que o anão gosta de surfar na cozinha??', 'Porque tem Microondas', ['Porque hoje é segunda-feira', 'Anão sei', 'Porque ele é um masterchef Júnior'], 13))
 questoes.append(Piadinha(2, 'Por que não se deve comprar uma peneira??', 'Pode ser uma furada', ['Você não precisa', 'Porque você não quer peneirar na vida', 'Num sei'], 5))
-questoes.append(Piadinha(3, 'Por que a velhinha não usa relógio??', 'Porque ela eh senhora', ['Porque ela é sabia e vê as horas pelo sol', 'Porque o neto robou para comprar um Hot Wheels', 'Porque ela não tem tempo pra isso'], 9))
-questoes.append(Piadinha(4, 'Sabe oque o tiaguinho foi fazer na igreja?', 'Foi cantar Pagod', ['Rezar', 'Comungar', 'Fazer um Show', 'Foi cantar "Oh Happy Day"'], 19))
-questoes.append(Piadinha(5, 'Por que o policial não lava a louça com sabão?', 'Porque ele prefere deter gente', ['Porque ele não tem tempo', 'Porque sabão é muito liso, e de liso já basta os bandidos', 'Porque não é um sabadão'], 15))
-questoes.append(Piadinha(6, 'Sabe porque hoje em dia não se passa mais roupa??', 'Pois a vida passa e a gente nem ve', ['Pessoas não usam mais roupas', 'Pois a única coisa que passa é a uva ou ônibus', 'Porque quem vive de passado é museu'], 21))
-questoes.append(Piadinha(7, 'Por que o bombeiro não gosta de andar?', 'Porque ele so corre', ['Pra que andar, se tem uber', 'Porque andar é coisa de véio'], 9))
-questoes.append(Piadinha(8, 'Oque é um pontinho pequeno e preto?', 'Eh uma blackteria', ['Um feijão anão', 'O ponto da questão', 'Um ponto negativo', 'Um ponto'], 34))
-questoes.append(Piadinha(9, 'E a pergunta que não quer calar, é pavê ou pacume?', 'Todas respostas', ['Pavê', 'Pacume', 'Pacheirar', 'Paolhar'], 50))
+# questoes.append(Piadinha(3, 'Por que a velhinha não usa relógio??', 'Porque ela eh senhora', ['Porque ela é sabia e vê as horas pelo sol', 'Porque o neto robou para comprar um Hot Wheels', 'Porque ela não tem tempo pra isso'], 9))
+# questoes.append(Piadinha(4, 'Sabe oque o tiaguinho foi fazer na igreja?', 'Foi cantar Pagod', ['Rezar', 'Comungar', 'Fazer um Show', 'Foi cantar "Oh Happy Day"'], 19))
+# questoes.append(Piadinha(5, 'Por que o policial não lava a louça com sabão?', 'Porque ele prefere deter gente', ['Porque ele não tem tempo', 'Porque sabão é muito liso, e de liso já basta os bandidos', 'Porque não é um sabadão'], 15))
+# questoes.append(Piadinha(6, 'Sabe porque hoje em dia não se passa mais roupa??', 'Pois a vida passa e a gente nem ve', ['Pessoas não usam mais roupas', 'Pois a única coisa que passa é a uva ou ônibus', 'Porque quem vive de passado é museu'], 21))
+# questoes.append(Piadinha(7, 'Por que o bombeiro não gosta de andar?', 'Porque ele so corre', ['Pra que andar, se tem uber', 'Porque andar é coisa de véio'], 9))
+# questoes.append(Piadinha(8, 'Oque é um pontinho pequeno e preto?', 'Eh uma blackteria', ['Um feijão anão', 'O ponto da questão', 'Um ponto negativo', 'Um ponto'], 34))
+# questoes.append(Piadinha(9, 'E a pergunta que não quer calar, é pavê ou pacume?', 'Todas respostas', ['Pavê', 'Pacume', 'Pacheirar', 'Paolhar'], 50))
 
 
 #   [INICIO]    --> [ [ ROTAS PARA TEMPLATES ] ]
@@ -59,7 +58,12 @@ def carregar_pergunta():
     global jogador
     global questoes
     global n_questao
-
+    global vencedor
+    if vencedor:
+        print("entrou na merda")
+        if vencedor['nome'] == jogador['nome']:
+            redirect('/winner')
+        redirect('/loser')
     atualiza_nQuestao()
     questao = questoes[n_questao]
     questao.embaralhaOpcoes()
@@ -70,15 +74,16 @@ def carregar_pergunta():
 def verifica_resposta():
     global n_questao
     global jogador
+    global vencedor
     resposta = request.forms.get('resposta')
-    semaforo.acquire()
     pts = questoes[n_questao].checkResposta(resposta)
     jogador['pts'] = jogador['pts'] + pts
     if 0 < pts:
         n_questao = n_questao + 1
         if n_questao == len(questoes):
-            print("Fim de jogo")
-    semaforo.release()
+            vencedor = jogador
+            # Inicia a thread que avisa que teve um vencedor já
+            t4.start()
     redirect('/pergunta')
 
 def atualiza_nQuestao():
@@ -92,6 +97,19 @@ def atualiza_nQuestao():
                 n_questao = nQuestaoVizinho
         except:
             print("Erro ao obter n_questao do Peer [", p, "]")
+
+@bottle.route('/winner', method='GET')
+@view('winner.html')
+def mostra_winner():
+    global vencedor
+    return {'jogador': vencedor, 'title': 'Um winner'}
+
+@bottle.route('/loser', method='GET')
+@view('loser.html')
+def mostra_loser():
+    global vencedor
+    global jogador
+    return {'jogador': jogador, 'vencedor': vencedor, 'title': 'Um loser'}
 
 #   [FIM]       --> [ [ ROTAS PARA TEMPLATES ] ]
 
@@ -126,6 +144,18 @@ def situacao_jogo():
 def meus_vizinhos():
     global n_questao
     return json.dumps(n_questao)
+
+# Compara os pontos
+@bottle.route('/vencedor/usr/<nome>')
+def compara_pts_com_vencedor(nome):
+    global jogador
+    global jogadores
+    global vencedor
+    adversario = jogadores[obterJogador(nome)]
+    if jogador['pts'] < adversario['pts']:
+        print("adversario ganhou de você")
+        vencedor = adversario
+
 
 #   [FIM]       --> [ [ ROTAS DE COMUNICAÇÃO ENTRE OS PEERS ] ]
 
@@ -199,6 +229,19 @@ def status_jogadores():
                 trata_jogadores_vizinho(jv.text.replace('\"', ''))
             except:
                 print("Erro ao obter jogadores do Peer [", p, "]")
+        time.sleep(1)
+
+# A cada 15 segundos é perguntado a lista de vizinhos para os seus vizinhos
+def prossivel_vencedor():
+    global peers
+    global jogador
+    while True:
+        for p in peers:
+            try:
+                requests.get('http://localhost:{}/vencedor/{}'.format(p, jogador['nome']))
+                # trata_jogadores_vizinho(jv.text.replace('\"', ''))
+            except:
+                print("Erro ao comunicar-se com o Peer [", p, "]")
         time.sleep(10)
 
 # t1 = threading.Thread(target=situacao_vizinhos)
@@ -209,6 +252,8 @@ def status_jogadores():
 
 t3 = threading.Thread(target=status_jogadores)
 t3.start()
+
+t4 = threading.Thread(target=prossivel_vencedor)
 
 #   [FIM]       --> [ [ THREADS ] ]
 
