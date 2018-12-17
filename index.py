@@ -15,6 +15,8 @@ port = sys.argv[1]
 
 jogador = ''
 jogadores = []
+# jogadores.append({'nome': 'perdi', 'pts': 10})
+# jogadores.append({'nome': 'topper', 'pts': 16})
 n_questao = 0
 vencedor = False
 
@@ -59,8 +61,8 @@ def carregar_pergunta():
     global questoes
     global n_questao
     global vencedor
+    print ("vencedor:", vencedor)
     if vencedor:
-        print("entrou na merda")
         if vencedor['nome'] == jogador['nome']:
             redirect('/winner')
         redirect('/loser')
@@ -81,27 +83,17 @@ def verifica_resposta():
     if 0 < pts:
         n_questao = n_questao + 1
         if n_questao == len(questoes):
-            vencedor = jogador
-            # Inicia a thread que avisa que teve um vencedor já
-            t4.start()
+            atualiza_vencedor(jogador)
     redirect('/pergunta')
-
-def atualiza_nQuestao():
-    global n_questao
-    for p in peers:
-        try:
-            nQuestaoVizinho = requests.get('http://localhost:{}/nPergunta'.format(p))
-            nQuestaoVizinho = int(nQuestaoVizinho.text)
-            if n_questao < nQuestaoVizinho:
-                print("Vizinho está mais avançado!!")
-                n_questao = nQuestaoVizinho
-        except:
-            print("Erro ao obter n_questao do Peer [", p, "]")
 
 @bottle.route('/winner', method='GET')
 @view('winner.html')
 def mostra_winner():
     global vencedor
+    global jogador
+    # Caso tenha atualizado o vencedor, redireciona para a rota LOSER
+    if vencedor['nome'] != jogador['nome']:
+        redirect('/loser')
     return {'jogador': vencedor, 'title': 'Um winner'}
 
 @bottle.route('/loser', method='GET')
@@ -146,23 +138,17 @@ def meus_vizinhos():
     return json.dumps(n_questao)
 
 # Compara os pontos
-@bottle.route('/vencedor/usr/<nome>')
-def compara_pts_com_vencedor(nome):
-    global jogador
-    global jogadores
+@bottle.route('/vencedor')
+def retorna_possivel_vencedor():
     global vencedor
-    adversario = jogadores[obterJogador(nome)]
-    if jogador['pts'] < adversario['pts']:
-        print("adversario ganhou de você")
-        vencedor = adversario
-
-
-#   [FIM]       --> [ [ ROTAS DE COMUNICAÇÃO ENTRE OS PEERS ] ]
+    if vencedor == False:
+        return json.dumps('sem winner')
+    return json.dumps(vencedor['nome'])
+#   [FIM]       -10-> [ [ ROTAS DE COMUNICAÇÃO ENTRE OS PEERS ] ]
 
 
 #   [INICIO]    --> [ [ THREADS ] ]
-
-# A cada 15 segundos confere se todos os clientes estão ativos
+# É verificado se todos os peers(vizinhos) estão ativos
 def situacao_vizinhos():
     global peers
     time.sleep(5)
@@ -174,19 +160,7 @@ def situacao_vizinhos():
             except requests.exceptions.ConnectionError:
                 print("[", p, "] Sem contato, faleceu!!!")
         time.sleep(5)
-
-def cria_vetor_vizinhos(msg):
-    global port
-    result = msg.replace('\"', '')
-    result = result.replace('[', '')
-    result = result.replace(']', '')
-    result = result.replace(' ', '')
-    result = set(result.split(','))
-    if port in result:
-        result.remove(port)
-    return result
-
-# A cada 15 segundos é perguntado a lista de vizinhos para os seus vizinhos
+# Pergunta-se para todos os peers(vizinhos) conhecidos, a sua respectiva lista de vizinhos
 def novos_vizinhos():
     global peers
     time.sleep(5)
@@ -200,7 +174,57 @@ def novos_vizinhos():
                 continue
         peers = peers.union(vizinhosNovos)
         time.sleep(10)
+# É perguntado a todos os vizinhos suas lista de jogadores
+def status_jogadores():
+    global peers
+    while True:
+        for p in peers:
+            try:
+                jv = requests.get('http://localhost:{}/situacaoJogo'.format(p))
+                trata_jogadores_vizinho(jv.text.replace('\"', ''))
+            except:
+                print("Erro ao obter jogadores do Peer [", p, "]")
+        time.sleep(1)
+# A cada 15 segundos é perguntado a lista de vizinhos para os seus vizinhos
+def vencedor_jogo():
+    global peers
+    global jogadores
+    while True:
+        for p in peers:
+            try:
+                aux = requests.get('http://localhost:{}/vencedor'.format(p))
+                aux = str(aux.text).replace('\"', '')
+                if aux != 'sem winner':
+                    idJogador = obterJogador(aux)
+                    atualiza_vencedor(jogadores[idJogador])
+            except:
+                print("Erro ao comunicar-se com o Peer [", p, "]")
+        time.sleep(5)
 
+t1 = threading.Thread(target=situacao_vizinhos)
+t1.start()
+
+t2 = threading.Thread(target=novos_vizinhos)
+t2.start()
+
+t3 = threading.Thread(target=status_jogadores)
+t3.start()
+
+t4 = threading.Thread(target=vencedor_jogo)
+t4.start()
+#   [FIM]       --> [ [ THREADS ] ]
+
+#   [INICIO]    --> [ [ FUNÇÕES ] ]
+# Tenta localizar o jogador e retornar o sua posição no vetor
+def obterJogador(n):
+    global jogadores
+    for j in range(len(jogadores)):
+        if jogadores[j]['nome'] == n:
+            return j
+    return -1
+# Recebe todos os jogadores do vizinho e fazendo duas possíveis operações:
+#   1ª Adicionado um novo jogador caso ele não se encontra na minha lista
+#   2ª Caso o jogador já está na lista, confere se precisa atualizar os pontos dele
 def trata_jogadores_vizinho(listaJogadores):
     global jogadores
     if listaJogadores:
@@ -218,51 +242,42 @@ def trata_jogadores_vizinho(listaJogadores):
                 if jogadores[idJogador]['pts'] < pts:
                     print("Atualizando pontos jogador")
                     jogadores[idJogador]['pts'] = pts
+# Trata a lista de vizinhos do vizinho(ficou estranha essa frase kk), e caso exista algum vizinho que "eu" não conheça é adicionado na minha lista de vizinhos
+def cria_vetor_vizinhos(msg):
+    global port
+    result = msg.replace('\"', '')
+    result = result.replace('[', '')
+    result = result.replace(']', '')
+    result = result.replace(' ', '')
+    result = set(result.split(','))
+    if port in result:
+        result.remove(port)
+    return result
+# Setar/Atualiza o vencedor do jogo
+def atualiza_vencedor(pVencedor):
+    global vencedor
 
-# A cada 15 segundos é perguntado a lista de vizinhos para os seus vizinhos
-def status_jogadores():
-    global peers
-    while True:
-        for p in peers:
-            try:
-                jv = requests.get('http://localhost:{}/situacaoJogo'.format(p))
-                trata_jogadores_vizinho(jv.text.replace('\"', ''))
-            except:
-                print("Erro ao obter jogadores do Peer [", p, "]")
-        time.sleep(1)
-
-# A cada 15 segundos é perguntado a lista de vizinhos para os seus vizinhos
-def prossivel_vencedor():
-    global peers
-    global jogador
-    while True:
-        for p in peers:
-            try:
-                requests.get('http://localhost:{}/vencedor/{}'.format(p, jogador['nome']))
-                # trata_jogadores_vizinho(jv.text.replace('\"', ''))
-            except:
-                print("Erro ao comunicar-se com o Peer [", p, "]")
-        time.sleep(10)
-
-# t1 = threading.Thread(target=situacao_vizinhos)
-# t1.start()
-#
-# t2 = threading.Thread(target=novos_vizinhos)
-# t2.start()
-
-t3 = threading.Thread(target=status_jogadores)
-t3.start()
-
-t4 = threading.Thread(target=prossivel_vencedor)
-
-#   [FIM]       --> [ [ THREADS ] ]
-
-def obterJogador(n):
-    global jogadores
-    for j in range(len(jogadores)):
-        if jogadores[j]['nome'] == n:
-            return j
-    return -1
+    if vencedor == False: # Caso não tenha nenhum vencedor
+        print("Adicionando vencedor, nome:", pVencedor['nome'])
+        vencedor = pVencedor
+        print("[if] vencedor:", vencedor)
+    else: # Caso já tenha um vencedor nesse client, deve comprar as pontuações
+        if vencedor['pts'] < pVencedor['pts']:
+            print("Pontos maiores, atualizando vencedor, nome:", pVencedor['nome'])
+            vencedor = pVencedor # Atualiza o vencedor se os pontos desse vencedor recebido seja maior
+# Confere com todos vizinhos, e pega a questão do vizinho mais avançado nas perguntas
+def atualiza_nQuestao():
+    global n_questao
+    for p in peers:
+        try:
+            nQuestaoVizinho = requests.get('http://localhost:{}/nPergunta'.format(p))
+            nQuestaoVizinho = int(nQuestaoVizinho.text)
+            if n_questao < nQuestaoVizinho:
+                print("Vizinho está mais avançado!!")
+                n_questao = nQuestaoVizinho
+        except:
+            print("Erro ao obter n_questao do Peer [", p, "]")
+#   [FIM]       --> [ [ FUNÇÕES ] ]
 
 # Carregando CSS
 @bottle.route('/imports/css/<filename>')
