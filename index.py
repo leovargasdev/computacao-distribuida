@@ -15,10 +15,9 @@ port = sys.argv[1]
 
 jogador = ''
 jogadores = []
-# jogadores.append({'nome': 'perdi', 'pts': 10})
-# jogadores.append({'nome': 'topper', 'pts': 16})
 n_questao = 0
 vencedor = False
+reiniciar = False
 
 questoes = []
 questoes.append(Piadinha(0, 'Qual o estado brasileiro que queria ser um carro?', 'Sergipe', ['Parana', 'New York', 'Guatambu', 'São Paulo', 'Gotham City'], 7))
@@ -96,6 +95,16 @@ def mostra_winner():
         redirect('/loser')
     return {'jogador': vencedor, 'title': 'Um winner'}
 
+@bottle.route('/winner', method='POST')
+def solicitar_reiniciar_jogo():
+    global vencedor
+    global jogador
+    # O jogo só pode ser reiniciado quando o vencedor quiser, ou quando a flag estiver ativa
+    if vencedor['nome'] == jogador['nome'] or reiniciar:
+        reiniciar_jogo()
+        redirect('/')
+    redirect('/loser')
+
 @bottle.route('/loser', method='GET')
 @view('loser.html')
 def mostra_loser():
@@ -104,8 +113,6 @@ def mostra_loser():
     return {'jogador': jogador, 'vencedor': vencedor, 'title': 'Um loser'}
 
 #   [FIM]       --> [ [ ROTAS PARA TEMPLATES ] ]
-
-
 
 #   [INICIO]    --> [ [ ROTAS DE COMUNICAÇÃO ENTRE OS PEERS ] ]
 
@@ -277,6 +284,22 @@ def atualiza_nQuestao():
                 n_questao = nQuestaoVizinho
         except:
             print("Erro ao obter n_questao do Peer [", p, "]")
+# Limpa todas as variaveis e avisa os vizinhos que pode reiniciar o jogo
+def reiniciar_jogo():
+    global jogador
+    global jogadores
+    global n_questao
+    global vencedor
+    global reiniciar
+    global peers
+    for p in peers:
+        try:
+            requests.get('http://localhost:{}/reiniciarJogo/{}'.format(p, reiniciar))
+        except:
+            print("Erro ao obter n_questao do Peer [", p, "]")
+    reiniciar = False
+    jogador['pts'] = 0
+    vencedor = False
 #   [FIM]       --> [ [ FUNÇÕES ] ]
 
 # Carregando CSS
